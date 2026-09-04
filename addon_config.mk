@@ -94,9 +94,15 @@ vs:
 	
 linuxarmv6l:
 linuxarmv7l:
-android/armeabi:	
-android/armeabi-v7a:	
+linuxaarch64:
+msys2:
+emscripten:
+android/armeabi-v7a:
+android/arm64-v8a:
+android/x86:
+android/x86_64:
 osx:
+macos:
 	# osx/iOS only, any framework that should be included in the project
 	# ADDON_FRAMEWORKS =
 ios:

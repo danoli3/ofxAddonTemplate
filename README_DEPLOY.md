@@ -15,7 +15,16 @@ State which license you offer your addon under. openFrameworks is distributed un
 
 Installation
 ------------
-Any steps necessary to install your addon. Optimally, this means just dropping the folder into the `openFrameworks/addons/` folder.
+Drop the folder into the `openFrameworks/addons/` folder, then fetch the
+prebuilt binaries for your platform:
+
+    ./scripts/download_libs.sh            # auto-detects: osx, linux64, msys2, ...
+    ./scripts/download_libs.sh ios        # a specific platform, or `all`
+
+(On Windows run it from git-bash, or use `scripts\download_libs.cmd`.)
+If your platform has no prebuilt release yet, the addon still builds from the
+sources under `libs/*/src/` - see `scripts/build_libs.sh` to build and publish
+binaries.
 
 Dependencies
 ------------

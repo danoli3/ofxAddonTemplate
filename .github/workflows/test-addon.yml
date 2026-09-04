@@ -1,0 +1,66 @@
+name: test-addon
+
+# Tests the addon against a tagged openFrameworks release (see OF_TAG below).
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      of_tag:
+        description: "openFrameworks tag to test against (blank = OF_TAG below)"
+
+env:
+  # TODO: change to test another OF version, e.g. nightly/master checkout
+  OF_TAG: ${{ inputs.of_tag || '0.12.1' }}
+  # TODO: rename to your addon (must match addon_config.mk ADDON_NAME)
+  ADDON_NAME: ofxMyAddon
+
+jobs:
+  linux64:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: addon
+      - name: Clone openFrameworks at tag
+        run: git clone --depth 1 --branch "$OF_TAG" https://github.com/openframeworks/openFrameworks ~/openFrameworks
+      - name: Install OF dependencies
+        run: |
+          cd ~/openFrameworks
+          sudo ./scripts/ci/linux64/install.sh
+          ./scripts/linux/download_libs.sh
+      - name: Install addon
+        run: |
+          mv "$GITHUB_WORKSPACE/addon" ~/openFrameworks/addons/$ADDON_NAME
+          cd ~/openFrameworks/addons/$ADDON_NAME
+          ./scripts/download_libs.sh linux64 || echo "no libs release yet, continuing with sources only"
+      - name: Build examples
+        run: |
+          export OF_ROOT=~/openFrameworks
+          for ex in ~/openFrameworks/addons/$ADDON_NAME/example_*; do
+            [ -d "$ex" ] || continue
+            echo "== building $ex"
+            make -C "$ex" -j"$(nproc)"
+          done
+
+  osx:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: addon
+      - name: Clone openFrameworks at tag
+        run: git clone --depth 1 --branch "$OF_TAG" https://github.com/openframeworks/openFrameworks ~/openFrameworks
+      - name: Install addon
+        run: |
+          mv "$GITHUB_WORKSPACE/addon" ~/openFrameworks/addons/$ADDON_NAME
+          cd ~/openFrameworks/addons/$ADDON_NAME
+          ./scripts/download_libs.sh osx || echo "no libs release yet, continuing with sources only"
+      - name: Build examples
+        run: |
+          export OF_ROOT=~/openFrameworks
+          for ex in ~/openFrameworks/addons/$ADDON_NAME/example_*; do
+            [ -d "$ex" ] || continue
+            echo "== building $ex"
+            make -C "$ex" -j"$(sysctl -n hw.ncpu)"
+          done
