@@ -12,6 +12,10 @@ on:
 env:
   # TODO: change to test another OF version, e.g. nightly/master checkout
   OF_TAG: ${{ inputs.of_tag || '0.12.1' }}
+  # Apothecary tag for OF *core* libs. There is no apothecary release per OF
+  # tag; OF 0.12.1 itself packages with LIBS_VERSION=latest
+  # (see OF scripts/dev/create_package.sh), so keep this at latest.
+  OF_LIBS_VERSION: latest
   # TODO: rename to your addon (must match addon_config.mk ADDON_NAME)
   ADDON_NAME: ofxMyAddon
 
@@ -28,7 +32,7 @@ jobs:
         run: |
           cd ~/openFrameworks
           sudo ./scripts/ci/linux64/install.sh
-          ./scripts/linux/download_libs.sh
+          ./scripts/linux/download_libs.sh -a 64 -t "$OF_LIBS_VERSION"
       - name: Install addon
         run: |
           mv "$GITHUB_WORKSPACE/addon" ~/openFrameworks/addons/$ADDON_NAME
@@ -51,6 +55,10 @@ jobs:
           path: addon
       - name: Clone openFrameworks at tag
         run: git clone --depth 1 --branch "$OF_TAG" https://github.com/openframeworks/openFrameworks ~/openFrameworks
+      - name: Install OF core libs
+        run: |
+          cd ~/openFrameworks
+          ./scripts/osx/download_libs.sh -t "$OF_LIBS_VERSION"
       - name: Install addon
         run: |
           mv "$GITHUB_WORKSPACE/addon" ~/openFrameworks/addons/$ADDON_NAME
