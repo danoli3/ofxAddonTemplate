@@ -1,9 +1,11 @@
+set(ADDON_NAME "ofxAddonTemplate")
+
 # Build the addon and its examples using openFrameworks' CMake support.
 # Requires an OF checkout containing project/CMake/openFrameworks.cmake.
 #   cmake -S . -B build -DOF_ROOT=/path/to/openFrameworks
 #   cmake --build build --parallel
 cmake_minimum_required(VERSION 3.22)
-project(ofxAddonTemplate LANGUAGES C CXX)
+project("${ADDON_NAME}" LANGUAGES C CXX)
 
 set(OF_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." CACHE PATH "openFrameworks root")
 set(OF_CMAKE "${OF_ROOT}/libs/openFrameworksCompiled/project/CMake/openFrameworks.cmake")
