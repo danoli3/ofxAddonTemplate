@@ -7,6 +7,7 @@
 
 class ofApp: public ofBaseApp{
 	public:
+		ofxAddonTemplate addon;
 		void setup();
 		void update();
 		void draw();

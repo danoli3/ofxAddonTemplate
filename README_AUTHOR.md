@@ -17,15 +17,15 @@ The folder structure for an addon looks like this:
     of_preRelease/
       addons/
         addons_config.mk
-        ofxMyAddon/
+        ofxAddonTemplate/
           docs/
               Doxyfile
               ...
           test/
               ...
           src/
-            ofxMyAddon.h
-            ofxMyAddon.cpp
+            ofxAddonTemplate.h
+            ofxAddonTemplate.cpp
             ...
           libs/
             necessaryLib/
@@ -78,3 +78,37 @@ At http://ofxaddons.com/ you will find a mostly automatically generated list of 
 Links
 -----
 Find more info on openframeworks at http://www.openframeworks.cc/
+
+Building and testing the template
+---------------------------------
+Keep the addon folder name, `addon_config.mk` ADDON_NAME, public header/class,
+`CMakeLists.txt` project name, `.github/workflows/test-addon.yml` ADDON_NAME and
+both examples' `addons.make` entries in sync when renaming the template.
+
+From your openFrameworks root, generate the example project files first:
+
+    projectGenerator/projectGenerator -o . -p osx addons/ofxAddonTemplate/example_myFirstExample
+    make -C addons/ofxAddonTemplate/example_myFirstExample Release
+
+Repeat for `example_mySecondExample`. Use `-p linux64` on Linux. The examples
+include and call the addon so the build checks that it is linked.
+
+With current openFrameworks master (native CMake support), build the addon and
+both examples without generating IDE projects:
+
+    cmake -S addons/ofxAddonTemplate -B /tmp/ofxAddonTemplate-build -DOF_ROOT="$PWD"
+    cmake --build /tmp/ofxAddonTemplate-build --parallel 3
+
+Use `-DADDON_BUILD_EXAMPLES=OFF` to build only the addon library. Native CMake
+handles the platform headers, frameworks and libraries from OF; `OF_TARGET` is
+not a separate addon setting. Older OF versions without the native CMake
+helpers can use their supported Project Generator / make workflow instead.
+
+Run the release-script tests from the addon directory:
+
+    python3 -m unittest discover -s tests -v
+
+GitHub Actions tests Linux and macOS against OF master by default. Its manual
+`of_ref` input can select another branch or tag with native CMake support.
+Leave `addon_libs_version` blank for the template's source-only build; once you
+publish binaries, set it to require a successful download from your repository.
