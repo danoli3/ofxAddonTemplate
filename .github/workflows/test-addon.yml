@@ -55,7 +55,7 @@ jobs:
           SCRIPTS_PLATFORM: ${{ matrix.scripts_platform }}
         run: |
           cd "$HOME/openFrameworks"
-          ./scripts/dev/download_libs.sh -p "$SCRIPTS_PLATFORM" -t "$OF_LIBS_VERSION"
+          ./scripts/"$SCRIPTS_PLATFORM"/download_libs.sh -t "$OF_LIBS_VERSION"
           ./scripts/dev/download_pg.sh -p "$SCRIPTS_PLATFORM"
       - name: Install addon
         run: |
