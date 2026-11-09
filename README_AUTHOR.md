@@ -112,3 +112,14 @@ GitHub Actions tests Linux and macOS against OF master by default. Its manual
 `of_ref` input can select another branch or tag with native CMake support.
 Leave `addon_libs_version` blank for the template's source-only build; once you
 publish binaries, set it to require a successful download from your repository.
+
+For Apple binary distribution, use `scripts/build_xcframework.sh` to merge
+per-architecture static-library builds. It supports macOS, iOS, tvOS, visionOS,
+watchOS and Catalyst, with simulator variants kept separate. `--platform all`
+stores the multi-platform XCFramework under `libs/<lib>/lib/macos/`; package
+that folder with `scripts/build_libs.sh macos`. See `libs/README.md` for full
+commands, release naming and addon configuration.
+
+On macOS the test suite also compiles small libraries for the Apple SDKs,
+creates XCFrameworks and verifies their architecture and platform metadata.
+The corresponding tests are skipped on hosts without Xcode.

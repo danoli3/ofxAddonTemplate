@@ -6,7 +6,7 @@ ADDON_NAME="$(basename "$ADDON_DIR")"
 GITHUB_REPO="yournamehere/${ADDON_NAME}"
 LIB_NAME="necessaryLib"
 LIBS_VERSION="$(tr -d ' \t\r\n' < "$SCRIPT_DIR/libs_version.txt")"
-ALL_PLATFORMS="osx ios tvos vs msys2 linux/64 linux/armv6l linux/armv7l linux/aarch64 android emscripten"
+ALL_PLATFORMS="osx macos ios tvos vs msys2 linux/64 linux/armv6l linux/armv7l linux/aarch64 android emscripten"
 
 fail() { echo "ERROR: $*" >&2; exit 1; }
 require_value() {
@@ -30,7 +30,6 @@ detect_platform() {
 validate_platform() {
     [ -n "$PLATFORM" ] || PLATFORM="$(detect_platform)"
     case "$PLATFORM" in
-        macos) PLATFORM=osx ;;
         linux64) PLATFORM=linux/64 ;;
         linuxarmv6l) PLATFORM=linux/armv6l ;;
         linuxarmv7l) PLATFORM=linux/armv7l ;;

@@ -40,7 +40,7 @@ shutil.copyfile(pathlib.Path(os.environ['TEST_ASSETS']) / asset, out)
                         TEST_ASSETS=str(self.assets), TMPDIR=str(self.root))
 
     def run_script(self, script, *args, ok=True):
-        result = subprocess.run(['bash', str(self.addon / 'scripts' / script), *args],
+        result = subprocess.run([os.environ.get('TEST_BASH', 'bash'), str(self.addon / 'scripts' / script), *args],
                                 env=self.env, capture_output=True, text=True)
         if ok:
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -48,7 +48,7 @@ shutil.copyfile(pathlib.Path(os.environ['TEST_ASSETS']) / asset, out)
             self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         return result
 
-    def package(self, version='1.0.0', platform='osx', argument='macos'):
+    def package(self, version='1.0.0', platform='osx', argument='osx'):
         # Contents need not be linkable to test packaging; actual addon builds
         # exercise the compiler and linker separately.
         folder = self.lib / 'lib' / platform
@@ -66,16 +66,29 @@ shutil.copyfile(pathlib.Path(os.environ['TEST_ASSETS']) / asset, out)
         self.assertIn('No built binaries', result.stderr)
         self.assertFalse((self.addon / 'releases').exists())
 
-    def test_package_download_round_trip_and_alias(self):
+    def test_package_download_round_trip(self):
         archive = self.package('2.0.0')
         with tarfile.open(archive) as stream:
             self.assertIn('lib/osx/libnecessaryLib.a', stream.getnames())
             self.assertNotIn('lib/osx/.gitkeep', stream.getnames())
         shutil.rmtree(self.lib)
-        self.run_script('download_libs.sh', 'macos', '-v', '2.0.0', '-u', 'author/addon')
+        self.run_script('download_libs.sh', 'osx', '-v', '2.0.0', '-u', 'author/addon')
         self.assertEqual((self.lib / 'lib/osx/libnecessaryLib.a').read_bytes(), b'archive fixture')
         self.assertTrue((self.lib / 'include/necessaryLib.h').is_file())
         self.assertEqual(list(self.root.glob('addon-libs.*')), [])
+
+    def test_macos_xcframework_release_preserves_other_platforms(self):
+        binary = self.lib / 'lib/macos/necessaryLib.xcframework/macos-arm64/libnecessaryLib.a'
+        binary.parent.mkdir(parents=True)
+        binary.write_bytes(b'xcframework fixture')
+        (binary.parents[1] / 'Info.plist').write_bytes(b'plist fixture')
+        self.run_script('build_libs.sh', 'macos')
+        name = 'ofxAddonTemplate-libs-macos-1.0.0.tar.bz2'
+        shutil.copyfile(self.addon / 'releases' / name, self.assets / name)
+        shutil.rmtree(self.lib / 'lib/macos')
+        self.run_script('download_libs.sh', 'macos', '-u', 'author/addon')
+        self.assertEqual(binary.read_bytes(), b'xcframework fixture')
+        self.assertTrue((self.lib / 'lib/osx/.gitkeep').is_file())
 
     def test_linux_layout_round_trip_and_legacy_aliases(self):
         for old, platform in (('linux64', 'linux/64'), ('linuxarmv6l', 'linux/armv6l'),
@@ -92,6 +105,18 @@ shutil.copyfile(pathlib.Path(os.environ['TEST_ASSETS']) / asset, out)
                 shutil.rmtree(self.lib / 'lib' / platform)
                 self.run_script('download_libs.sh', old, '-u', 'author/addon')
                 self.assertTrue((self.lib / 'lib' / platform / 'libnecessaryLib.a').is_file())
+
+    def test_all_download_uses_canonical_platform_assets(self):
+        platforms = ('osx', 'macos', 'ios', 'tvos', 'vs', 'msys2', 'linux/64',
+                     'linux/armv6l', 'linux/armv7l', 'linux/aarch64', 'android', 'emscripten')
+        for platform in platforms:
+            self.package(platform=platform, argument=platform)
+        shutil.rmtree(self.lib)
+        self.run_script('download_libs.sh', 'all', '-u', 'author/addon')
+        for platform in platforms:
+            self.assertTrue((self.lib / 'lib' / platform / 'libnecessaryLib.a').is_file())
+        self.assertFalse((self.lib / 'lib/linux64').exists())
+        self.assertFalse((self.lib / 'lib/linuxaarch64').exists())
 
     def test_linux_host_detection(self):
         uname = self.root / 'tools/uname'

@@ -2,7 +2,8 @@
 
 Prebuilt binaries live here, one folder per openFrameworks platform token:
 
-    libs/<lib>/lib/osx/            macOS (also matches the `macos` alias)
+    libs/<lib>/lib/osx/            macOS static libraries
+    libs/<lib>/lib/macos/          Apple XCFrameworks (one or multiple platforms)
     libs/<lib>/lib/ios/            iOS
     libs/<lib>/lib/tvos/           tvOS
     libs/<lib>/lib/vs/             Windows Visual Studio (.lib)
@@ -45,3 +46,73 @@ duplicate definitions. For example, in the appropriate `addon_config.mk` section
     ADDON_SOURCES_EXCLUDE += libs/necessaryLib/src/%
 
 The template defaults to bundled sources; no download or release is required.
+
+## Apple XCFrameworks
+
+`scripts/build_xcframework.sh` combines **already built static libraries**. It
+uses `lipo` only to merge architectures for the same platform and variant, then
+uses `xcodebuild -create-xcframework` to collect the platforms. It requires
+Xcode and Python 3 on macOS; build the actual library separately for each SDK.
+Device and simulator binaries remain separate, even when both use arm64.
+
+For a universal macOS XCFramework:
+
+```sh
+./scripts/build_xcframework.sh --platform macos \
+  --slice macos/arm64=build/mac-arm64/libnecessaryLib.a \
+  --slice macos/x86_64=build/mac-x86_64/libnecessaryLib.a
+```
+
+For iOS device plus a universal simulator:
+
+```sh
+./scripts/build_xcframework.sh --platform ios \
+  --slice ios/arm64=build/ios-device/libnecessaryLib.a \
+  --slice ios-simulator/arm64=build/ios-sim-arm64/libnecessaryLib.a \
+  --slice ios-simulator/x86_64=build/ios-sim-x86_64/libnecessaryLib.a
+```
+
+For **one XCFramework containing all supplied Apple platforms**, pass all five
+slices above in the same invocation with `--platform all` (the default). Add
+`tvos`, `tvos-simulator`, `xros`, `xros-simulator`, `watchos`,
+`watchos-simulator` or `catalyst` slices in the same `platform/arch=path` form
+for further targets. Only supplied slices are included; missing SDK builds are
+not compiled or invented. Duplicate slices, architecture mismatches and
+incorrect platform/variant labels are rejected.
+
+The default output is `libs/necessaryLib/lib/macos/necessaryLib.xcframework`
+for `macos` or `all`, and `lib/ios/necessaryLib.xcframework` for `ios` (similarly
+for tvOS, visionOS and watchOS). `--name`, `--headers` and `--output` override
+the defaults. Existing output requires `--force`; a failed merge leaves the
+existing XCFramework in place.
+
+Publish and install the combined Apple package with:
+
+```sh
+./scripts/build_libs.sh macos -v 1.0.0
+./scripts/download_libs.sh macos -v 1.0.0 -u owner/repo
+```
+
+`macos` now denotes the XCFramework folder and release asset
+`<addon>-libs-macos-<version>.tar.bz2`; use `osx` for the separate desktop
+static-library package. A combined `macos` package contains all the Apple
+slices in its XCFramework and can be installed for an iOS/tvOS consumer too.
+
+For targets that do not automatically search `lib/macos`, explicitly select
+that shared XCFramework in each relevant Apple section of `addon_config.mk`:
+
+```make
+osx:
+    ADDON_LIBS = libs/necessaryLib/lib/macos/necessaryLib.xcframework
+    ADDON_SOURCES_EXCLUDE += libs/necessaryLib/src/%
+ios:
+    ADDON_LIBS = libs/necessaryLib/lib/macos/necessaryLib.xcframework
+    ADDON_SOURCES_EXCLUDE += libs/necessaryLib/src/%
+tvos:
+    ADDON_LIBS = libs/necessaryLib/lib/macos/necessaryLib.xcframework
+    ADDON_SOURCES_EXCLUDE += libs/necessaryLib/src/%
+```
+
+Add equivalent `macos:`, `xros:` or `watchos:` sections as needed for your
+consumer's build system. Supported build systems select the XCFramework slice
+for the target SDK. Source-only projects can leave these settings unset.
