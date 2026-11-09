@@ -107,10 +107,10 @@ Desktop.ini
 *.sqlite
 
 #########################
-# addon prebuilt binaries
+# addon library binaries
 #########################
 
-# Binaries are fetched with scripts/download_libs.sh, not committed.
+# Keep locally built library binaries out of the source template.
 # (Folder skeleton is kept via .gitkeep files.)
 libs/*/lib/**/*.[ao]
 libs/*/lib/**/*.lib
@@ -119,5 +119,3 @@ libs/*/lib/**/*.dylib
 libs/*/lib/**/*.dll
 libs/*/lib/**/*.framework
 libs/*/lib/**/*.xcframework
-*.tar.bz2
-/releases/
