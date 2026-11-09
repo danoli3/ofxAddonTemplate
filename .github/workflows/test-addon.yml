@@ -54,7 +54,7 @@ jobs:
       - name: Generate and build examples with make
         run: |
           export OF_ROOT="$HOME/openFrameworks"
-          for ex in "$OF_ROOT/addons/$ADDON_NAME"/example_*; do
+          for ex in "$OF_ROOT/addons/$ADDON_NAME"/example*; do
             [ -d "$ex/src" ] || continue
             "$OF_ROOT/projectGenerator/projectGenerator" -o "$OF_ROOT" \
               -p "${{ matrix.platform }}" "$ex"
