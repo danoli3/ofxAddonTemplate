@@ -24,7 +24,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC openFrameworks::openFrameworks)
 
 option(ADDON_BUILD_EXAMPLES "Build the addon examples" ON)
 if(ADDON_BUILD_EXAMPLES)
-    file(GLOB EXAMPLES LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/example_*")
+    file(GLOB EXAMPLES LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/example*")
     foreach(EXAMPLE IN LISTS EXAMPLES)
         if(IS_DIRECTORY "${EXAMPLE}/src")
             get_filename_component(EXAMPLE_NAME "${EXAMPLE}" NAME)
