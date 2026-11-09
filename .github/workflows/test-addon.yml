@@ -8,6 +8,8 @@ on:
       of_ref:
         description: "openFrameworks branch or tag (default: master)"
         default: master
+      addon_libs_version:
+        description: "Optional addon binaries release tag (blank: build bundled sources)"
 
 permissions:
   contents: read
@@ -16,8 +18,20 @@ env:
   OF_REF: ${{ inputs.of_ref || 'master' }}
   OF_LIBS_VERSION: latest
   ADDON_NAME: ofxAddonTemplate
+  ADDON_LIBS_VERSION: ${{ inputs.addon_libs_version }}
 
 jobs:
+  library-scripts:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - run: python3 -m unittest discover -s tests -v
+        env:
+          TEST_BASH: /bin/bash
+
   examples:
     strategy:
       fail-fast: false
@@ -25,9 +39,11 @@ jobs:
         include:
           - os: ubuntu-24.04
             platform: linux64 # Project Generator CLI token
+            libs_platform: linux/64
             scripts_platform: linux
           - os: macos-15
             platform: osx
+            libs_platform: osx
             scripts_platform: osx
     runs-on: ${{ matrix.os }}
     steps:
@@ -51,6 +67,10 @@ jobs:
       - name: Install addon
         run: |
           mv "$GITHUB_WORKSPACE/addon" "$HOME/openFrameworks/addons/$ADDON_NAME"
+          if [ -n "$ADDON_LIBS_VERSION" ]; then
+            "$HOME/openFrameworks/addons/$ADDON_NAME/scripts/download_libs.sh" \
+              "${{ matrix.libs_platform }}" -v "$ADDON_LIBS_VERSION" -u "$GITHUB_REPOSITORY"
+          fi
       - name: Generate and build examples with make
         run: |
           export OF_ROOT="$HOME/openFrameworks"
