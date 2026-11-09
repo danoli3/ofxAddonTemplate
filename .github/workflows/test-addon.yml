@@ -45,7 +45,6 @@ jobs:
             platform: osx
             libs_platform: osx
             scripts_platform: osx
-            libs_platform: osx
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
