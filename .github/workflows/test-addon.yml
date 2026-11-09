@@ -33,11 +33,14 @@ jobs:
       matrix:
         include:
           - os: ubuntu-24.04
-            platform: linux64
+            platform: linux64 # Project Generator CLI token
+            libs_platform: linux/64
             scripts_platform: linux
           - os: macos-15
             platform: osx
+            libs_platform: osx
             scripts_platform: osx
+            libs_platform: osx
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -62,7 +65,7 @@ jobs:
           mv "$GITHUB_WORKSPACE/addon" "$HOME/openFrameworks/addons/$ADDON_NAME"
           if [ -n "$ADDON_LIBS_VERSION" ]; then
             "$HOME/openFrameworks/addons/$ADDON_NAME/scripts/download_libs.sh" \
-              "${{ matrix.platform }}" -v "$ADDON_LIBS_VERSION" -u "$GITHUB_REPOSITORY"
+              "${{ matrix.libs_platform }}" -v "$ADDON_LIBS_VERSION" -u "$GITHUB_REPOSITORY"
           fi
       - name: Generate and build examples with make
         run: |

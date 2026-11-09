@@ -2,7 +2,7 @@
 # Download addon binaries from GitHub releases.
 # Usage: scripts/download_libs.sh [platform|all] [-v version] [-u user/repo]
 # Configure scripts/libs_common.sh and scripts/libs_version.txt first.
-# Archives: <addon-folder>-libs-<platform>-<version>.tar.bz2
+# Archives: <addon-folder>-libs-<platform-with-slashes-as-dashes>-<version>.tar.bz2
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/libs_common.sh"
 PLATFORM=""
@@ -24,7 +24,7 @@ trap 'rm -rf "$TEMP_DIR"' EXIT
 
 download_one() {
     local platform="$1"
-    local asset="${ADDON_NAME}-libs-${platform}-${LIBS_VERSION}.tar.bz2"
+    local asset="$(release_asset_name "$platform")"
     local url="https://github.com/${GITHUB_REPO}/releases/download/${LIBS_VERSION}/${asset}"
     local stage="$TEMP_DIR/$platform"
     echo "==> ${platform}: downloading ${url}"

@@ -78,12 +78,13 @@ common:
 	# For example in the ofxOpenCV addon we do something like this:
 	#
 	# ADDON_LIBS =
-	# ADDON_LIBS += libs/opencv/lib/linuxarmv6l/libopencv_legacy.a
-	# ADDON_LIBS += libs/opencv/lib/linuxarmv6l/libopencv_calib3d.a
+	# ADDON_LIBS += libs/opencv/lib/linux/armv6l/libopencv_legacy.a
+	# ADDON_LIBS += libs/opencv/lib/linux/armv6l/libopencv_calib3d.a
 	# ...
 	
 	
-linux64:
+linux:
+linux/64:
 	# linux only, any library that should be included in the project using
 	# pkg-config
 	# ADDON_PKG_CONFIG_LIBRARIES =
@@ -92,9 +93,9 @@ vs:
 	# only windows visual studio
 	# ADDON_DLLS_TO_COPY = 
 	
-linuxarmv6l:
-linuxarmv7l:
-linuxaarch64:
+linux/armv6l:
+linux/armv7l:
+linux/aarch64:
 msys2:
 emscripten:
 android/armeabi-v7a:

@@ -19,7 +19,7 @@ Drop the folder into `openFrameworks/addons/`. The template builds from its
 bundled sources. If the addon author publishes prebuilt libraries, configure
 `scripts/libs_common.sh` and fetch binaries for your platform:
 
-    ./scripts/download_libs.sh            # auto-detects: osx, linux64, msys2, ...
+    ./scripts/download_libs.sh            # auto-detects: osx, linux/64, msys2, ...
     ./scripts/download_libs.sh ios        # a specific platform, or `all`
 
 (On Windows run it from git-bash, or use `scripts\download_libs.cmd`.)

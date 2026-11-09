@@ -31,7 +31,7 @@ RELEASE_DIR="$ADDON_DIR/releases"
 BINARY="$(find "$OUT_DIR" -type f -size +0c ! -name '.gitkeep' ! -name '*.md' -print -quit)"
 [ -n "$BINARY" ] || fail "No built binaries in $OUT_DIR (the template only supplies .gitkeep)"
 [ -d "$LIB_DIR/include" ] || fail "Missing headers: $LIB_DIR/include"
-ASSET="${ADDON_NAME}-libs-${PLATFORM}-${LIBS_VERSION}.tar.bz2"
+ASSET="$(release_asset_name "$PLATFORM")"
 mkdir -p "$RELEASE_DIR"
 TEMP_ARCHIVE="$(mktemp "$RELEASE_DIR/.package.XXXXXX")"
 trap 'rm -f "$TEMP_ARCHIVE"' EXIT

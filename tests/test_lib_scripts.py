@@ -48,12 +48,15 @@ shutil.copyfile(pathlib.Path(os.environ['TEST_ASSETS']) / asset, out)
             self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         return result
 
-    def package(self, version='1.0.0'):
+    def package(self, version='1.0.0', platform='osx', argument='macos'):
         # Contents need not be linkable to test packaging; actual addon builds
         # exercise the compiler and linker separately.
-        (self.lib / 'lib/osx/libnecessaryLib.a').write_bytes(b'archive fixture')
-        self.run_script('build_libs.sh', 'macos', '-v', version)
-        name = f'ofxAddonTemplate-libs-osx-{version}.tar.bz2'
+        folder = self.lib / 'lib' / platform
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / 'libnecessaryLib.a').write_bytes(b'archive fixture')
+        self.run_script('build_libs.sh', argument, '-v', version)
+        token = platform.replace('/', '-')
+        name = f'ofxAddonTemplate-libs-{token}-{version}.tar.bz2'
         archive = self.addon / 'releases' / name
         shutil.copyfile(archive, self.assets / name)
         return archive
@@ -73,6 +76,36 @@ shutil.copyfile(pathlib.Path(os.environ['TEST_ASSETS']) / asset, out)
         self.assertEqual((self.lib / 'lib/osx/libnecessaryLib.a').read_bytes(), b'archive fixture')
         self.assertTrue((self.lib / 'include/necessaryLib.h').is_file())
         self.assertEqual(list(self.root.glob('addon-libs.*')), [])
+
+    def test_linux_layout_round_trip_and_legacy_aliases(self):
+        for old, platform in (('linux64', 'linux/64'), ('linuxarmv6l', 'linux/armv6l'),
+                              ('linuxarmv7l', 'linux/armv7l'), ('linuxaarch64', 'linux/aarch64')):
+            with self.subTest(platform=platform):
+                archive = self.package(platform=platform, argument=old)
+                with tarfile.open(archive) as stream:
+                    self.assertIn(f'lib/{platform}/libnecessaryLib.a', stream.getnames())
+                    self.assertFalse(any(name.startswith(f'lib/{old}/') for name in stream.getnames()))
+                shutil.rmtree(self.lib / 'lib' / platform)
+                # The canonical argument downloads the same asset made via the alias.
+                self.run_script('download_libs.sh', platform, '-u', 'author/addon')
+                self.assertEqual((self.lib / 'lib' / platform / 'libnecessaryLib.a').read_bytes(), b'archive fixture')
+                shutil.rmtree(self.lib / 'lib' / platform)
+                self.run_script('download_libs.sh', old, '-u', 'author/addon')
+                self.assertTrue((self.lib / 'lib' / platform / 'libnecessaryLib.a').is_file())
+
+    def test_linux_host_detection(self):
+        uname = self.root / 'tools/uname'
+        uname.write_text('#!/bin/sh\nif [ "$1" = -s ]; then echo Linux; else echo "$TEST_ARCH"; fi\n')
+        uname.chmod(0o755)
+        for arch, platform in (('x86_64', 'linux/64'), ('aarch64', 'linux/aarch64'),
+                               ('arm64', 'linux/aarch64'), ('armv6l', 'linux/armv6l'),
+                               ('armv7l', 'linux/armv7l')):
+            with self.subTest(arch=arch):
+                self.package(platform=platform, argument=platform)
+                shutil.rmtree(self.lib / 'lib' / platform)
+                self.env['TEST_ARCH'] = arch
+                self.run_script('download_libs.sh', '-u', 'author/addon')
+                self.assertTrue((self.lib / 'lib' / platform / 'libnecessaryLib.a').is_file())
 
     def test_build_uses_shared_version_file(self):
         (self.addon / 'scripts/libs_version.txt').write_text('3.2.1\r\n')

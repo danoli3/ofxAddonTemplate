@@ -39,7 +39,7 @@ The folder structure for an addon looks like this:
               lib/
                 osx/
                   static_libwhatever.a
-                linux/
+                linux/64/
                   static_libwhatever.a
                 ... //other platforms
           example_anExample/
